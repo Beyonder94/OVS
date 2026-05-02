@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HRMS - Professional Medical Portal</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --dark-bg: #0f172a; --card-bg: #1e293b; --accent-blue: #3b82f6;
+            --accent-green: #10b981; --accent-red: #ef4444; --text-light: #f8fafc;
+        }
+        body { font-family: 'Poppins', sans-serif; background-color: var(--dark-bg); color: var(--text-light); margin: 0; min-height: 100vh; }
+        .lang-wrapper { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; text-align: center; }
+        .lang-btn { background: rgba(255, 255, 255, 0.15); color: white; border: 1px solid rgba(255, 255, 255, 0.3); padding: 10px 20px; border-radius: 30px; cursor: pointer; font-size: 14px; backdrop-filter: blur(10px); }
+        .lang-options { display: none; background: white; border-radius: 12px; margin-top: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); overflow: hidden; position: absolute; width: 180px; left: 50%; transform: translateX(-50%); }
+        .lang-options button { display: block; width: 100%; padding: 12px; border: none; background: none; color: #333; cursor: pointer; font-size: 14px; border-bottom: 1px solid #eee; }
+        #homePage { text-align: center; margin: 150px auto; max-width: 500px; background: rgba(255, 255, 255, 0.05); padding: 50px; border-radius: 30px; border: 1px solid rgba(255, 255, 255, 0.1); }
+        .main-btn { background: linear-gradient(45deg, #3b82f6, #1d4ed8); color: white; padding: 18px 45px; border: none; border-radius: 50px; font-size: 18px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        #loginSection { display: none; background: white; width: 90%; max-width: 400px; padding: 30px; border-radius: 25px; margin: 80px auto; color: #333; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+        .role-box { border-radius: 15px; padding: 20px; margin-bottom: 20px; border: 2px solid #e2e8f0; background: #f8fafc; }
+        input, select { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
+        .pass-wrapper { position: relative; width: 100%; }
+        .pass-wrapper i { position: absolute; right: 12px; top: 22px; cursor: pointer; color: #64748b; }
+        .login-submit { width: 100%; padding: 14px; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 10px; font-size: 16px; }
+        #dashboard { display: none; padding-bottom: 50px; }
+        .dash-header { padding: 25px 5%; display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); }
+        .container { width: 92%; max-width: 1100px; background: white; color: #1e293b; padding: 30px; border-radius: 20px; margin: 20px auto; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th { background: #3b82f6; color: white; padding: 15px; text-align: left; }
+        td { padding: 15px; border-bottom: 1px solid #f1f5f9; }
+        .btn-red { background: var(--accent-red); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .pdf-btn { background: #1e293b; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; }
+        .del-btn { background: none; color: var(--accent-red); border: none; cursor: pointer; font-size: 18px; margin-left: 10px; }
+        .settings-btn { background: #64748b; color: white; border: none; padding: 10px 18px; border-radius: 8px; cursor: pointer; margin-top: 15px; }
+        .admin-settings { display: none; background: #f1f5f9; padding: 20px; border-radius: 12px; margin-top: 15px; border: 1px dashed #3b82f6; }
+        .date-label { font-size: 12px; font-weight: bold; color: #64748b; display: block; text-align: left; }
+    </style>
+</head>
+<body onload="initSecurity()">
+
+    <div class="lang-wrapper">
+        <button class="lang-btn" onclick="toggleLangMenu()">
+            <i class="fas fa-language"></i> <span id="currentLangText">Change Language (English)</span>
+        </button>
+        <div id="langMenu" class="lang-options">
+            <button onclick="changeLang('en')">English</button>
+            <button onclick="changeLang('hi')">Hindi (हिंदी)</button>
+            <button onclick="changeLang('kn')">Kannada (ಕನ್ನಡ)</button>
+        </div>
+    </div>
+
+    <div id="homePage">
+        <h1 id="t_title">HRMS PORTAL</h1>
+        <p id="t_subtitle">Advanced Diagnosis & Report System</p>
+        <button class="main-btn" onclick="showLogin()"><span id="t_getStarted">Get Started</span> ➡️</button>
+    </div>
+
+    <div id="loginSection">
+        <h2 id="t_secureLogin">🔑 Secure Login</h2>
+        <div class="role-box" style="border-top: 5px solid var(--accent-blue);">
+            <h3 id="t_docHead">Doctor Portal</h3>
+            <input type="text" id="dNameInput" placeholder="Doctor Name">
+            <div class="pass-wrapper">
+                <input type="password" id="dPassInput" placeholder="Password">
+                <i class="fas fa-eye" id="togglePass" onclick="togglePassVisibility()"></i>
+            </div>
+            <button class="login-submit" id="t_btnDoc" onclick="processLogin('doctor')" style="background:var(--accent-blue);">Login as Doctor</button>
+        </div>
+        <div class="role-box" style="border-top: 5px solid var(--accent-green);">
+            <h3 id="t_patHead">Patient Portal</h3>
+            <input type="text" id="pNameInput" placeholder="Enter Your Full Name">
+            <button class="login-submit" id="t_btnPat" onclick="processLogin('patient')" style="background:var(--accent-green);">View My Report</button>
+        </div>
+        <button onclick="location.reload()" id="t_back" style="background:none; border:none; color:#64748b; cursor:pointer;">← Back to Home</button>
+    </div>
+
+    <div id="dashboard">
+        <div class="dash-header">
+            <h2 id="t_dashHead" style="color:white; margin:0;">Dashboard</h2>
+            <button onclick="location.reload()" class="btn-red" id="t_logout">Logout 🏠</button>
+        </div>
+
+        <div class="container" id="doctorView">
+            <h3 id="t_createHead" style="color:var(--accent-blue); margin-top:0;">Create Patient Report</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                <input type="text" id="p_name" placeholder="Patient Name">
+                <input type="number" id="p_age" placeholder="Age">
+                <input type="text" id="p_disease" placeholder="Disease">
+                <input type="text" id="p_test" placeholder="Test Name">
+                <div>
+                    <span class="date-label" id="t_addDate">Add Date</span>
+                    <input type="date" id="p_date">
+                </div>
+                <select id="p_status">
+                    <option value="Normal" id="opt_normal">Normal</option>
+                    <option value="Positive" id="opt_positive">Positive</option>
+                    <option value="Critical" id="opt_critical">Critical</option>
+                </select>
+            </div>
+            <button onclick="saveReport()" id="t_publish" style="width:100%; padding:15px; background:var(--accent-blue); color:white; border:none; border-radius:8px; margin-top:15px; font-weight:bold; cursor:pointer;">PUBLISH REPORT 📤</button>
+            
+            <button class="settings-btn" onclick="toggleSettings()"><i class="fas fa-cog"></i> <span id="t_settings">Settings</span></button>
+            <div id="settingsBox" class="admin-settings">
+                <h4 id="t_changePass">Change Admin Password</h4>
+                <input type="password" id="newStaffPass" placeholder="New Password">
+                <button onclick="updateSystemPass()" id="t_updateBtn" style="background:var(--accent-blue); color:white; border:none; padding:10px; border-radius:5px; cursor:pointer;">Update Password</button>
+            </div>
+        </div>
+
+        <div class="container">
+            <h3 id="t_healthRecords">Patient Health Records</h3>
+            <div id="doctorSearchArea">
+                <input type="text" id="tableSearch" placeholder="Search records..." onkeyup="filterTable()" style="margin-bottom:15px; border:2px solid #e2e8f0;">
+            </div>
+            <div style="overflow-x:auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th id="th_name">Patient Name</th>
+                            <th id="th_age">Age</th>
+                            <th id="th_dis">Disease</th>
+                            <th id="th_test">Test</th>
+                            <th id="th_doc">Doctor & Date</th>
+                            <th id="th_sts">Status</th>
+                            <th id="th_act">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reportsBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentRole = "";
+        let loggedInDoctor = "";
+
+        // Initialize Security Logic[cite: 1]
+        function initSecurity() {
+            if (!localStorage.getItem('hrms_final_password')) {
+                localStorage.setItem('hrms_final_password', 'HRMS');
+            }
+        }
+
+        // Login Process without Hints[cite: 1]
+        function processLogin(role) {
+            currentRole = role;
+            if(role === 'doctor') {
+                const docName = document.getElementById('dNameInput').value.trim();
+                const docPass = document.getElementById('dPassInput').value.trim();
+                const systemPass = localStorage.getItem('hrms_final_password');
+
+                if(!docName) return alert("Enter Doctor Name");
+                
+                if(docPass === systemPass) {
+                    loggedInDoctor = "Dr. " + docName;
+                    enterDashboard();
+                } else {
+                    // Removed hint text as requested[cite: 1]
+                    alert("Incorrect Password!"); 
+                }
+            } else {
+                const patientName = document.getElementById('pNameInput').value.trim();
+                if(!patientName) return alert("Enter Patient Name");
+                enterDashboard(patientName);
+            }
+        }
+
+        function enterDashboard(filter = "") {
+            document.getElementById('loginSection').style.display = "none";
+            document.getElementById('dashboard').style.display = "block";
+            document.querySelector('.lang-wrapper').style.display = "none";
+
+            if(currentRole === 'doctor') {
+                document.getElementById('doctorView').style.display = "block";
+                document.getElementById('doctorSearchArea').style.display = "block";
+                loadReports("");
+            } else {
+                document.getElementById('doctorView').style.display = "none";
+                document.getElementById('doctorSearchArea').style.display = "none";
+                loadReports(filter);
+            }
+        }
+
+        function updateSystemPass() {
+            const p = document.getElementById('newStaffPass').value.trim();
+            if(p.length < 3) return alert("Too Short!");
+            localStorage.setItem('hrms_final_password', p);
+            alert("Password Updated!");
+            document.getElementById('newStaffPass').value = "";
+            toggleSettings();
+        }
+
+        // Standard Utility Functions[cite: 1]
+        function togglePassVisibility() {
+            const pi = document.getElementById('dPassInput');
+            const ti = document.getElementById('togglePass');
+            if (pi.type === "password") { pi.type = "text"; ti.classList.replace('fa-eye', 'fa-eye-slash'); }
+            else { pi.type = "password"; ti.classList.replace('fa-eye-slash', 'fa-eye'); }
+        }
+
+        function saveReport() {
+            const r = { 
+                name: document.getElementById('p_name').value, 
+                age: document.getElementById('p_age').value, 
+                disease: document.getElementById('p_disease').value, 
+                test: document.getElementById('p_test').value, 
+                date: document.getElementById('p_date').value, 
+                status: document.getElementById('p_status').value, 
+                doctor: loggedInDoctor, id: Date.now() 
+            };
+            if(!r.name || !r.date) return alert("Name and Date are required!");
+            let reports = JSON.parse(localStorage.getItem('h_reports') || "[]");
+            reports.push(r);
+            localStorage.setItem('h_reports', JSON.stringify(reports));
+            alert("Report Published!");
+            ['p_name','p_age','p_disease','p_test','p_date'].forEach(id => document.getElementById(id).value = "");
+            loadReports("");
+        }
+
+        function loadReports(filter = "") {
+            const reports = JSON.parse(localStorage.getItem('h_reports') || "[]");
+            const tbody = document.getElementById('reportsBody');
+            tbody.innerHTML = "";
+            const filtered = filter ? reports.filter(x => x.name.toLowerCase().includes(filter.toLowerCase())) : reports;
+            filtered.forEach(r => {
+                let btns = `<button class="pdf-btn" onclick='downloadPDF(${JSON.stringify(r)})'><i class="fas fa-file-pdf"></i></button>`;
+                if(currentRole === 'doctor') btns += `<button class="del-btn" onclick="deleteReport(${r.id})"><i class="fas fa-trash"></i></button>`;
+                tbody.innerHTML += `<tr><td>${r.name}</td><td>${r.age}</td><td>${r.disease}</td><td>${r.test}</td><td>${r.doctor}<br><small>${r.date}</small></td><td><b>${r.status}</b></td><td>${btns}</td></tr>`;
+            });
+        }
+
+        function deleteReport(id) { if(confirm("Are you sure?")) { let res = JSON.parse(localStorage.getItem('h_reports')).filter(x => x.id !== id); localStorage.setItem('h_reports', JSON.stringify(res)); loadReports(""); } }
+
+        function downloadPDF(data) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.text("MEDICAL REPORT", 105, 20, { align: "center" });
+            doc.autoTable({ startY: 30, body: [['Name', data.name],['Age', data.age],['Disease', data.disease],['Test', data.test],['Status', data.status],['Doctor', data.doctor],['Date', data.date]] });
+            doc.save(`${data.name}_Report.pdf`);
+        }
+
+        function filterTable() { loadReports(document.getElementById('tableSearch').value); }
+        function showLogin() { document.getElementById('homePage').style.display = 'none'; document.getElementById('loginSection').style.display = 'block'; }
+        function toggleLangMenu() { const m = document.getElementById('langMenu'); m.style.display = (m.style.display === "block") ? "none" : "block"; }
+        function toggleSettings() { const s = document.getElementById('settingsBox'); s.style.display = (s.style.display === "block") ? "none" : "block"; }
+
+        const langData = {
+            'en': { btn: 'Change Language (English)', title: 'HRMS PORTAL', sub: 'Advanced Diagnosis & Report System', start: 'Get Started', secure: '🔑 Secure Login', doc: 'Doctor Portal', pat: 'Patient Portal', btnD: 'Login as Doctor', btnP: 'View My Report', back: '← Back to Home', dash: 'Dashboard', out: 'Logout 🏠', create: 'Create Patient Report', add: 'Add Date', pub: 'PUBLISH REPORT 📤', set: 'Settings', chg: 'Change Admin Password', upd: 'Update Password', records: 'Patient Health Records', search: 'Search records...', n: 'Patient Name', a: 'Age', d: 'Disease', t: 'Test', dr: 'Doctor & Date', s: 'Status', act: 'Action' },
+            'hi': { btn: 'भाषा बदलें (हिंदी)', title: 'HRMS पोर्टल', sub: 'उन्नत निदान और रिपोर्ट प्रणाली', start: 'शुरू करें', secure: '🔑 सुरक्षित लॉगिन', doc: 'डॉक्टर पोर्टल', pat: 'मरीज पोर्टल', btnD: 'डॉक्टर लॉगिन', btnP: 'मेरी रिपोर्ट देखें', back: '← होम पर वापस', dash: 'डैशबोर्ड', out: 'बाहर निकलें 🏠', create: 'मरीज रिपोर्ट बनाएं', add: 'तारीख जोड़ें', pub: 'रिपोर्ट प्रकाशित करें 📤', set: 'सेटिंग्स', chg: 'एडमिन पासवर्ड बदलें', upd: 'पासवर्ड अपडेट करें', records: 'मरीज स्वास्थ्य रिकॉर्ड', search: 'खोजें...', n: 'मरीज का नाम', a: 'उम्र', d: 'बीमारी', t: 'जांच', dr: 'डॉक्टर और तारीख', s: 'स्थिति', act: 'कार्रवाई' },
+            'kn': { btn: 'ಭಾಷೆ ಬದಲಾಯಿಸಿ (ಕನ್ನಡ)', title: 'HRMS ಪೋರ್ಟಲ್', sub: 'ಸುಧಾರಿತ ರೋಗನಿರ್ಣಯ ಮತ್ತು ವರದಿ ವ್ಯವಸ್ಥೆ', start: 'ಪ್ರಾರಂಭಿಸಿ', secure: '🔑 ಸುರಕ್ಷಿತ ಲಾಗಿನ್', doc: 'ವೈದ್ಯರ ಪೋರ್ಟಲ್', pat: 'ರೋಗಿಯ ಪೋರ್ಟಲ್', btnD: 'ವೈದ್ಯರ ಲಾಗಿನ್', btnP: 'ವರದಿ ನೋಡಿ', back: '← ಹೋಮ್‌ಗೆ ಹಿಂತಿರುಗಿ', dash: 'ಡ್ಯಾಶ್‌ಬೋರ್ಡ್', out: 'ಲಾಗ್ ಔಟ್ 🏠', create: 'ವರದಿ ರಚಿಸಿ', add: 'ದಿನಾಂಕ ಸೇರಿಸಿ', pub: 'ವರದಿ ಪ್ರಕಟಿಸಿ 📤', set: 'ಸೆಟ್ಟಿಂಗ್‌ಗಳು', chg: 'ಪಾಸ್‌ವರ್ಡ್ ಬದಲಾಯಿಸಿ', upd: 'ಅಪ್‌ಡೇಟ್ ಮಾಡಿ', records: 'ರೋಗಿಯ ದಾಖಲೆಗಳು', search: 'ಹುಡುಕಿ...', n: 'ರೋಗಿಯ ಹೆಸರು', a: 'ವಯಸ್ಸು', d: 'ಕಾಯಿಲೆ', t: 'ಪರೀಕ್ಷೆ', dr: 'ವೈದ್ಯರು ಮತ್ತು ದಿನಾಂಕ', s: 'ಸ್ಥಿತಿ', act: 'ಕ್ರಮ' }
+        };
+
+        function changeLang(code) {
+            const d = langData[code];
+            document.getElementById('currentLangText').innerText = d.btn;
+            document.getElementById('t_title').innerText = d.title;
+            document.getElementById('t_subtitle').innerText = d.sub;
+            document.getElementById('t_getStarted').innerText = d.start;
+            document.getElementById('t_secureLogin').innerText = d.secure;
+            document.getElementById('t_docHead').innerText = d.doc;
+            document.getElementById('t_patHead').innerText = d.pat;
+            document.getElementById('t_btnDoc').innerText = d.btnD;
+            document.getElementById('t_btnPat').innerText = d.btnP;
+            document.getElementById('t_back').innerText = d.back;
+            document.getElementById('t_dashHead').innerText = d.dash;
+            document.getElementById('t_logout').innerText = d.out;
+            document.getElementById('t_createHead').innerText = d.create;
+            document.getElementById('t_addDate').innerText = d.add;
+            document.getElementById('t_publish').innerText = d.pub;
+            document.getElementById('t_settings').innerText = d.set;
+            document.getElementById('t_changePass').innerText = d.chg;
+            document.getElementById('t_updateBtn').innerText = d.upd;
+            document.getElementById('t_healthRecords').innerText = d.records;
+            document.getElementById('th_name').innerText = d.n;
+            document.getElementById('th_age').innerText = d.a;
+            document.getElementById('th_dis').innerText = d.d;
+            document.getElementById('th_test').innerText = d.t;
+            document.getElementById('th_doc').innerText = d.dr;
+            document.getElementById('th_sts').innerText = d.s;
+            document.getElementById('th_act').innerText = d.act;
+            document.getElementById('langMenu').style.display = "none";
+        }
+    </script>
+</body>
+</html>
